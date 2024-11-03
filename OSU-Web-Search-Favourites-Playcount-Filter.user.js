@@ -44,7 +44,10 @@
                         const match = dataOrigTitle.match(/(\d[\d,]*)/);
                         count = match ? parseInt(match[0].replace(/,/g, '')) : 0;
                     }
-                    el.closest(panelSelector).style.opacity = (count < minCount) ? '0' : '1';
+                    const panel = el.closest(panelSelector);
+                    if (count < minCount) {
+                        panel.remove(); // 요소를 DOM에서 완전히 제거
+                    }
                 });
             });
             isUpdating = false;
