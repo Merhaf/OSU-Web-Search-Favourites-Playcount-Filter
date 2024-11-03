@@ -23,7 +23,10 @@
             parseInt(document.getElementById('minFavouritecount').value) || 0,
             parseInt(document.getElementById('minPlaycount').value) || 0
         ];
+        let isUpdating = false;
         const updateFilters = () => {
+            if (isUpdating) return;
+            isUpdating = true;
             const [minFavouritecount, minPlaycount] = getMinCounts();
             const selectors = [
                 { selector: '.beatmapset-panel__stats-item--favourite-count', minCount: minFavouritecount, panelSelector: '.beatmapset-panel' },
@@ -31,10 +34,20 @@
             ];
             selectors.forEach(({ selector, minCount, panelSelector }) => {
                 document.querySelectorAll(selector).forEach(el => {
-                    const count = parseInt(el.querySelector('span:nth-of-type(2)').textContent) || 0;
+                    const title = el.getAttribute('title');
+                    const dataOrigTitle = el.getAttribute('data-orig-title');
+                    let count = 0;
+                    if (title) {
+                        const match = title.match(/(\d[\d,]*)/);
+                        count = match ? parseInt(match[0].replace(/,/g, '')) : 0;
+                    } else if (dataOrigTitle) {
+                        const match = dataOrigTitle.match(/(\d[\d,]*)/);
+                        count = match ? parseInt(match[0].replace(/,/g, '')) : 0;
+                    }
                     el.closest(panelSelector).style.opacity = (count < minCount) ? '0' : '1';
                 });
             });
+            isUpdating = false;
         };
         const appendFilterDiv = () => {
             const filterGrid = document.querySelector('.beatmapsets-search__filter-grid');
@@ -44,13 +57,7 @@
             }
         };
         appendFilterDiv();
-        const intervalId = setInterval(updateFilters, 10);
-        const targetNode = document.querySelector('.beatmapsets__items');
-        if (targetNode) {
-            new MutationObserver(updateFilters).observe(targetNode, { childList: true, subtree: true });
-        }
-        new MutationObserver(updateFilters).observe(document.body, { attributes: true });
-        new MutationObserver(appendFilterDiv).observe(document.head, { childList: true, subtree: true });
+        const intervalId = setInterval(updateFilters, 5);
         window.addEventListener('beforeunload', () => clearInterval(intervalId));
         updateFilters();
     };
