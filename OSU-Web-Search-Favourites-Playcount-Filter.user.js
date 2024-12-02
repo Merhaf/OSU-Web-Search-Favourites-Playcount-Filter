@@ -57,8 +57,18 @@
             }
         };
         appendFilterDiv();
-        const intervalId = setInterval(updateFilters, 5);
-        window.addEventListener('beforeunload', () => clearInterval(intervalId));
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.addedNodes.length) {
+                    updateFilters();
+                }
+            });
+        });
+        observer.observe(document.querySelector('.beatmapsets'), {
+            childList: true,
+            subtree: true
+        });
         updateFilters();
+        window.addEventListener('beforeunload', () => observer.disconnect());
     };
 })();
